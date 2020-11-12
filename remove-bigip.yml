@@ -1,0 +1,54 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - creds.yml
+  tasks:
+    - name: Template running for BIG-IP
+      template:
+        src: bigiq.j2
+        dest: ./bigips/{{ item.ip }}.json
+        mode: 0644
+      loop: "{{ bigip_IP }}"
+      tags:
+        - gen_files
+
+    - name: show files
+      shell: "find ./bigips/*.json"
+      register: find_output
+      tags:
+        - gen_files
+
+    - debug:
+        var: find_output
+      tags:
+        - gen_files
+
+    - name: Remove a license from a pool
+      shell: "curl -k --header Content-Type: application/json --request POST -d @{{ item }} -u{{ provider.user }}:{{ provider.password }} https://{{ provider.server }}/mgmt/cm/device/tasks/licensing/pool/member-management"
+      delegate_to: localhost
+      with_items:
+        - "{{ find_output.stdout_lines }}"
+
+    - name: Collect all bigips inside dir
+      find:
+        path: ./bigips
+        hidden: true
+        file_type: file
+        # use_regex: yes
+        # patterns:
+        # - '^[a-z]{1,5}_.*json'
+      changed_when: false
+      register: bigip_done
+      tags:
+        - removeme
+
+    - name: Remove bigips done inside bigips dir
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ bigip_done.files }}"
+      when: bigip_done.matched|int != 0
+      tags:
+        - removeme
+

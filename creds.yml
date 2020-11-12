@@ -1,0 +1,12 @@
+---
+provider:
+    password: "YOURPASS"
+    server: ipaddress
+    user: admin
+    validate_certs: false
+    server_port: 443
+PoolName: "licename"
+
+bigip_IP:
+    - {ip: '10.0.3.4', mac: '00:0D:3A:9A:34:78'}
+    - {ip: '10.0.3.6', mac: '00:22:48:1B:F3:86'}
