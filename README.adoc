@@ -1,1 +1,8 @@
 = Revoking BIG-IP from BIG-IQ 
+
+NOTE: Make sure you enable basic auth in your BIG-IQ
+
+ssh into BIG-IQ
+----
+set-basic-auth on 
+----
