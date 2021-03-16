@@ -4,31 +4,36 @@
   vars_files:
     - creds.yml
   tasks:
-    - name: Template running for BIG-IP
+    - name: Running the Template to gen json
       template:
         src: bigiq.j2
-        dest: ./bigips/{{ item.ip }}.json
+        dest: ./bigips/{{ item.mac }}.json
         mode: 0644
       loop: "{{ bigip_IP }}"
       tags:
         - gen_files
+        - remove_now
 
     - name: show files
       shell: "find ./bigips/*.json"
       register: find_output
       tags:
         - gen_files
+        - remove_now
 
     - debug:
         var: find_output
       tags:
         - gen_files
+        - remove_now
 
     - name: Remove a license from a pool
       shell: "curl -k --header Content-Type: application/json --request POST -d @{{ item }} -u{{ provider.user }}:{{ provider.password }} https://{{ provider.server }}/mgmt/cm/device/tasks/licensing/pool/member-management"
       delegate_to: localhost
       with_items:
         - "{{ find_output.stdout_lines }}"
+      tags:
+        - remove_now
 
     - name: Collect all bigips inside dir
       find:
